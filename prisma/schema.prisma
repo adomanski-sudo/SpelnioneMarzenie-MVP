@@ -14,7 +14,7 @@ datasource db {
 }
 
 // ------------------------------------------------------
-// MODELE APLIKACJI (TWOJA LOGIKA BIZNESOWA)
+// MODELE APLIKACJI 
 // ------------------------------------------------------
 
 enum DreamCategory {
@@ -110,9 +110,4 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
