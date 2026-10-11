@@ -52,7 +52,7 @@ export default async function Home() {
                 />
                 <select name="category" className="border border-gray-300 p-3 rounded-xl w-full text-sm bg-white">
                   <option value="CZAS">Czas (np. wycieczka w góry)</option>
-                  <option value="POMYSL">Pomysł (np. worek bokserski)</option>
+                  <option value="POMYSL">Pomysł (np. worek bokserski!)</option>
                   <option value="KONKRET">Konkret (dokładny model/link)</option>
                   <option value="USMIECH">Uśmiech (drobiazg bez okazji)</option>
                 </select>
@@ -66,7 +66,7 @@ export default async function Home() {
             <div>
               <h2 className="text-lg font-bold mb-3">Twoje marzenia ({userDreams.length})</h2>
               {userDreams.length === 0 ? (
-                <p className="text-gray-500 text-sm">Nie masz jeszcze żadnych marzeń. Dodaj pierwsze powyżej!</p>
+                <p className="text-gray-500 text-sm">Nie masz jeszcze żadnych marzeń. Dodaj pierwsze powyżej.</p>
               ) : (
                 <ul className="flex flex-col gap-3">
                   {userDreams.map((dream) => (
