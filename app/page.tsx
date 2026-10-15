@@ -66,7 +66,7 @@ export default async function Home() {
             <div>
               <h2 className="text-lg font-bold mb-3">Twoje marzenia ({userDreams.length})</h2>
               {userDreams.length === 0 ? (
-                <p className="text-gray-500 text-sm">Nie masz jeszcze żadnych marzeń. Dodaj pierwsze powyżej.</p>
+                <p className="text-gray-500 text-sm">Nie masz jeszcze żadnych marzeń. Dodaj pierwsze powyżej ↑</p>
               ) : (
                 <ul className="flex flex-col gap-3">
                   {userDreams.map((dream) => (
