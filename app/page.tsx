@@ -1,6 +1,7 @@
 import { auth, signIn, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { addDreamAction } from "@/actions/dreamActions";
+import Link from "next/link";
 
 export default async function Home() {
   const session = await auth();
@@ -36,8 +37,12 @@ export default async function Home() {
                 <button className="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition-colors">
                   Wyloguj
                 </button>
+                <Link href="/friends" className="block text-center bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-bold py-2 px-4 rounded-lg mt-4 transition-colors">
+                  Zarządzaj znajomymi
+                </Link>
               </form>
             </div>
+            
 
             {/* Formularz dodawania marzenia */}
             <div className="mb-8">
