@@ -75,6 +75,9 @@ model User {
   // Relacja znajomych (prosta implementacja relacji wielu do wielu)
   friends       User[]    @relation("UserFriends")
   friendOf      User[]    @relation("UserFriends")
+
+  sentRequests     FriendRequest[] @relation("SentRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedRequests")
 }
 
 model Account {
@@ -110,4 +113,24 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model FriendRequest {
+  id         String        @id @default(cuid())
+  senderId   String
+  receiverId String
+  status     RequestStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
+
+  sender     User          @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User          @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  // Blokada przed wysyłaniem wielu zaproszeń (spamu) do tej samej osoby
+  @@unique([senderId, receiverId])
 }
