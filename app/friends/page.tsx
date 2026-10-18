@@ -92,13 +92,17 @@ export default async function FriendsPage() {
           ) : (
             <ul className="flex flex-col gap-2">
               {user.friends.map((friend) => (
-                <li key={friend.id} className="p-3 border border-gray-100 bg-gray-50 rounded-xl flex justify-between items-center">
-                  <div>
-                    <p className="font-bold text-gray-800 text-sm">{friend.name}</p>
-                    <p className="text-xs text-gray-500">{friend.email}</p>
-                  </div>
-                </li>
-              ))}
+        <li key={friend.id}>
+          {/* Używamy komponentu Link, by przejść do profilu o id = friend.id */}
+          <Link href={`/friends/${friend.id}`} className="p-3 border border-gray-100 bg-gray-50 hover:bg-blue-50 rounded-xl flex justify-between items-center transition-colors block">
+            <div>
+              <p className="font-bold text-gray-800 text-sm">{friend.name}</p>
+              <p className="text-xs text-gray-500">{friend.email}</p>
+            </div>
+            <div className="text-blue-500 text-sm font-bold">&rarr;</div>
+          </Link>
+        </li>
+      ))}
             </ul>
           )}
         </div>

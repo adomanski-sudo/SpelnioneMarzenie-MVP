@@ -39,30 +39,42 @@ export async function sendFriendRequest(formData: FormData) {
     return { error: "Ten użytkownik jest już na Twojej liście znajomych." };
   }
 
-  // Sprawdzenie, czy zaproszenie już nie istnieje (w dowolną stronę)
-  const existingRequest = await prisma.friendRequest.findFirst({
+  // Sprawdzenie, czy historia zaproszeń między tą parą już istnieje w bazie
+  const previousRequest = await prisma.friendRequest.findFirst({
     where: {
       OR: [
         { senderId: sender.id, receiverId: receiver.id },
         { senderId: receiver.id, receiverId: sender.id }
-      ],
-      status: "PENDING"
+      ]
     }
   });
 
-  if (existingRequest) {
-    return { error: "Zaproszenie między Wami już oczekuje na rozpatrzenie." };
+  if (previousRequest) {
+    if (previousRequest.status === "PENDING") {
+      return { error: "Zaproszenie między Wami już oczekuje na rozpatrzenie." };
+    }
+    
+    // Jeśli zaproszenie było odrzucone (lub zaakceptowane, ale znajomość została usunięta),
+    // "odnawiamy" je, nadpisując status i ustawiając aktualnego nadawcę i odbiorcę
+    await prisma.friendRequest.update({
+      where: { id: previousRequest.id },
+      data: {
+        status: "PENDING",
+        senderId: sender.id,
+        receiverId: receiver.id
+      }
+    });
+  } else {
+    // Jeśli w bazie jest zupełnie czysto, tworzymy nowe zaproszenie
+    await prisma.friendRequest.create({
+      data: {
+        senderId: sender.id,
+        receiverId: receiver.id,
+      }
+    });
   }
 
-  // Utworzenie zaproszenia
-  await prisma.friendRequest.create({
-    data: {
-      senderId: sender.id,
-      receiverId: receiver.id,
-    }
-  });
-
-  revalidatePath("/"); // Odświeżenie widoku
+  revalidatePath("/");
   return { success: "Zaproszenie zostało wysłane!" };
 }
 
