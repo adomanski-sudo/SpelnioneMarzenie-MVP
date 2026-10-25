@@ -1,18 +1,42 @@
 import Link from "next/link";
 import { Bell, UserCircle, LogIn } from "lucide-react";
 import { auth, signIn } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 export default async function TopBar() {
   const session = await auth();
+
+  // Obliczamy liczbę nieprzeczytanych powiadomień i zaproszeń
+  let unreadCount = 0;
+
+  if (session?.user?.email) {
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: {
+        _count: {
+          select: {
+            receivedRequests: { where: { status: "PENDING" } },
+            notifications: { where: { isRead: false } },
+          },
+        },
+      },
+    });
+
+    if (user) {
+      unreadCount = user._count.receivedRequests + user._count.notifications;
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center shadow-sm">
       {/* 1. Powiadomienia (Lewa) */}
       <Link href="/notifications" className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors">
         <Bell size={24} />
-        <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-          3
-        </span>
+        {unreadCount > 0 && (
+          <span className="absolute top-1 right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+            {unreadCount}
+          </span>
+        )}
       </Link>
 
       {/* 2. Logo (Środek) */}

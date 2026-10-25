@@ -155,7 +155,7 @@ export default async function ProfilePage() {
           <div className="space-y-2">
             {fulfilledDreams.map((dream) => (
               <div key={dream.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex justify-between items-center opacity-75">
-                <span className="text-sm font-medium text-gray-700 line-through">{dream.title}</span>
+                <span className="text-sm font-medium text-gray-700">{dream.title}</span>
                 <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
                   Spełnione ✓
                 </span>

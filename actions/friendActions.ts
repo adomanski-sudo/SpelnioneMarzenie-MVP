@@ -112,9 +112,10 @@ export async function acceptFriendRequest(requestId: string) {
       where: { id: request.senderId },
       data: { friends: { connect: { id: request.receiverId } } }
     })
+
   ]);
 
-  revalidatePath("/");
+  revalidatePath("/friends");
 }
 
 // 3. ODRZUCENIE ZAPROSZENIA
@@ -134,5 +135,55 @@ export async function rejectFriendRequest(requestId: string) {
     data: { status: "REJECTED" }
   });
 
-  revalidatePath("/");
+  revalidatePath("/friends");
+}
+
+// 4. WYSYŁANIE ZAPROSZENIA BEZPOŚREDNIO Z PROFILU (po ID użytkownika)
+export async function sendFriendRequestById(receiverId: string) {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  const sender = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { friends: true },
+  });
+
+  if (!sender || sender.id === receiverId) return;
+
+  // Sprawdzamy, czy już nie są znajomymi
+  const alreadyFriends = sender.friends.some((f) => f.id === receiverId);
+  if (alreadyFriends) return;
+
+  // Sprawdzamy historię zaproszeń między tą parą
+  const previousRequest = await prisma.friendRequest.findFirst({
+    where: {
+      OR: [
+        { senderId: sender.id, receiverId: receiverId },
+        { senderId: receiverId, receiverId: sender.id },
+      ],
+    },
+  });
+
+  if (previousRequest) {
+    if (previousRequest.status === "PENDING") return;
+
+    await prisma.friendRequest.update({
+      where: { id: previousRequest.id },
+      data: {
+        status: "PENDING",
+        senderId: sender.id,
+        receiverId: receiverId,
+      },
+    });
+  } else {
+    await prisma.friendRequest.create({
+      data: {
+        senderId: sender.id,
+        receiverId: receiverId,
+      },
+    });
+  }
+
+  revalidatePath(`/friends/${receiverId}`);
+  revalidatePath("/friends");
 }

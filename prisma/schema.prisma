@@ -78,6 +78,7 @@ model User {
 
   sentRequests     FriendRequest[] @relation("SentRequests")
   receivedRequests FriendRequest[] @relation("ReceivedRequests")
+  notifications    Notification[] @relation("UserNotifications")
 }
 
 model Account {
@@ -133,4 +134,15 @@ model FriendRequest {
 
   // Blokada przed wysyłaniem wielu zaproszeń (spamu) do tej samej osoby
   @@unique([senderId, receiverId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   // ID użytkownika, który ma otrzymać powiadomienie
+  message   String   @db.Text
+  link      String?  // Opcjonalny link (np. do profilu osoby, która próbowała zarezerwować)
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -20,17 +20,22 @@ export async function addDreamAction(formData: FormData) {
 
   if (!title || !category) return;
 
+  // 2. Pobieramy autora WRAZ z listą ID jego znajomych
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
+    include: {
+      friends: {
+        select: { id: true }, // Pobieramy tylko kolumnę id dla lekkości zapytania
+      },
+    },
   });
 
   if (!user) throw new Error("Nie znaleziono użytkownika w bazie.");
 
-  // 2. Zapisujemy kompletne marzenie w bazie
+  // 3. Zapisujemy nowe marzenie w bazie
   await prisma.dream.create({
     data: {
       title,
-      // Jeśli pole tekstowe było puste, zapisujemy null zamiast pustego ciągu ""
       description: description?.trim() ? description.trim() : null,
       link: link?.trim() ? link.trim() : null,
       category,
@@ -39,7 +44,20 @@ export async function addDreamAction(formData: FormData) {
     },
   });
 
-  // 3. Odświeżamy dane strony głównej i przekierowujemy na nią użytkownika
+  // 4. NOWOŚĆ: Rozsyłamy powiadomienie do wszystkich znajomych autora
+  if (user.friends.length > 0) {
+    const authorName = user.name || user.email;
+
+    await prisma.notification.createMany({
+      data: user.friends.map((friend) => ({
+        userId: friend.id,
+        message: `${authorName} dodał(a) nowe marzenie: „${title}”.`,
+        link: `/friends/${user.id}`,
+      })),
+    });
+  }
+
+  // 5. Odświeżamy dane i wracamy na stronę główną
   revalidatePath("/");
   redirect("/");
 }
@@ -69,7 +87,17 @@ export async function reserveDreamAction(dreamId: string, friendId: string) {
     if (dream.reservedById === currentUser.id) {
       return { error: "To marzenie zostało już przez Ciebie zarezerwowane." };
     }
-    return { error: "Ktoś inny już zarezerwował to marzenie." };
+
+    // NOWOŚĆ: Powiadamiamy osobę, która zarezerwowała ten prezent wcześniej!
+    await prisma.notification.create({
+      data: {
+        userId: dream.reservedById, // Pierwszy rezerwujący
+        message: `${currentUser.name || currentUser.email} również chciał(a) zarezerwować marzenie „${dream.title}”. Może połączycie siły przy wspólnym prezencie?`,
+        link: `/friends/${currentUser.id}`, // Link do profilu tej osoby
+      },
+    });
+
+    return { error: "Ktoś inny już zarezerwował to marzenie. Daliśmy mu znać, że też chciałeś je spełnić!" };
   }
 
   // Zapis w bazie danych
@@ -142,4 +170,26 @@ export async function deleteDreamAction(dreamId: string) {
 
   revalidatePath("/");
   revalidatePath("/profile");
+}
+
+// OZNACZENIE POWIADOMIEŃ JAKO PRZECZYTANE
+export async function markNotificationsAsReadAction() {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  const currentUser = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!currentUser) return;
+
+  await prisma.notification.updateMany({
+    where: {
+      userId: currentUser.id,
+      isRead: false,
+    },
+    data: { isRead: true },
+  });
+
+  revalidatePath("/notifications");
+  revalidatePath("/");
 }

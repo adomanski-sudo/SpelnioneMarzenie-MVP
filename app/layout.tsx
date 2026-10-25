@@ -25,7 +25,7 @@ export default function RootLayout({
           Na komputerze będzie to wyśrodkowany prostokąt (imitacja ekranu telefonu). 
           Na komórce zajmie 100% szerokości. 
         */}
-        <div className="mx-auto max-w-md min-h-screen bg-white relative shadow-2xl flex flex-col">
+        <div className="mx-auto max-w-md min-h-screen bg-[#f2f5f9] relative shadow-2xl flex flex-col">
           
           <TopBar />
           
