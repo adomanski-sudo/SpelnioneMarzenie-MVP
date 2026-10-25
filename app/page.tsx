@@ -1,4 +1,4 @@
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import ReserveButton from "@/components/ReserveButton";
 import { cancelReservationAction } from "@/actions/dreamActions";
@@ -47,23 +47,6 @@ export default async function Home() {
 
   return (
     <div className="p-4 space-y-4">
-      {/* Sekcja powitalna */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          {session?.user?.name ? `Cześć, ${session.user.name.split(' ')[0]}!` : "Tablica Marzeń"}
-        </h1>
-        <p className="text-gray-500 text-sm">
-          {session ? "Oto co marzy się Twoim znajomym." : "Zaloguj się, aby zyskać pełen dostęp."}
-        </p>
-        
-        {!session && (
-          <form action={async () => { "use server"; await signIn("google"); }} className="mt-4">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full text-sm transition-colors shadow-md">
-              Zaloguj przez Google
-            </button>
-          </form>
-        )}
-      </div>
 
       {/* Siatka Kafelków (Card UI) */}
       {feedDreams.length === 0 ? (

@@ -100,3 +100,46 @@ export async function cancelReservationAction(dreamId: string, friendId: string)
 
   revalidatePath(`/friends/${friendId}`);
 }
+
+// OZNACZENIE MARZENIA JAKO SPEŁNIONE (Archiwizacja)
+export async function fulfillDreamAction(dreamId: string) {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  const currentUser = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!currentUser) return;
+
+  await prisma.dream.update({
+    where: {
+      id: dreamId,
+      authorId: currentUser.id, // Bezpiecznik: tylko autor może oznaczyć swoje marzenie
+    },
+    data: { isFulfilled: true },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/profile");
+}
+
+// USUNIĘCIE MARZENIA (Gdyby ktoś dodał coś przez pomyłkę)
+export async function deleteDreamAction(dreamId: string) {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  const currentUser = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!currentUser) return;
+
+  await prisma.dream.delete({
+    where: {
+      id: dreamId,
+      authorId: currentUser.id, // Bezpiecznik: tylko autor może usunąć
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/profile");
+}
