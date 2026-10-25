@@ -3,39 +3,45 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function addDreamAction(formData: FormData) {
-  // 1. Weryfikacja sesji
   const session = await auth();
   if (!session?.user?.email) {
     throw new Error("Musisz być zalogowany, aby dodać marzenie.");
   }
 
-  // 2. Pobranie danych z formularza
+  // 1. Pobieramy wszystkie pola z formularza
   const title = formData.get("title") as string;
+  const description = formData.get("description") as string;
+  const link = formData.get("link") as string;
   const category = formData.get("category") as "CZAS" | "POMYSL" | "KONKRET" | "USMIECH";
+  const visibility = formData.get("visibility") as "PUBLIC" | "PRIVATE";
 
   if (!title || !category) return;
 
-  // 3. Wyszukanie ID użytkownika w bazie na podstawie e-maila
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
   });
 
   if (!user) throw new Error("Nie znaleziono użytkownika w bazie.");
 
-  // 4. Zapis nowego marzenia
+  // 2. Zapisujemy kompletne marzenie w bazie
   await prisma.dream.create({
     data: {
       title,
+      // Jeśli pole tekstowe było puste, zapisujemy null zamiast pustego ciągu ""
+      description: description?.trim() ? description.trim() : null,
+      link: link?.trim() ? link.trim() : null,
       category,
-      authorId: user.id, // Przypisujemy marzenie do zalogowanego autora
-      visibility: "PUBLIC",
+      visibility: visibility || "PUBLIC",
+      authorId: user.id,
     },
   });
 
-  // 5. Odświeżenie widoku strony głównej (aby od razu wyświetlić nowe marzenie)
+  // 3. Odświeżamy dane strony głównej i przekierowujemy na nią użytkownika
   revalidatePath("/");
+  redirect("/");
 }
 
 
