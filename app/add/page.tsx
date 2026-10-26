@@ -3,6 +3,8 @@ import { addDreamAction } from "@/actions/dreamActions";
 import Link from "next/link";
 import { ArrowLeft, Sparkles, Link as LinkIcon, Lock, Globe } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function AddDreamPage() {
   const session = await auth();
 

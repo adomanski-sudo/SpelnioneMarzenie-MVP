@@ -5,6 +5,8 @@ import ReserveButton from "@/components/ReserveButton";
 import { cancelReservationAction } from "@/actions/dreamActions";
 import { Search, Users, Sparkles, Lock, ExternalLink, ArrowRight } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 // W Next.js 15 parametry z adresu URL (po znaku ?) są obiektem Promise
 type Props = {
   searchParams: Promise<{

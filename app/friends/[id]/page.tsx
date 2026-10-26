@@ -7,6 +7,8 @@ import { cancelReservationAction } from "@/actions/dreamActions";
 import { sendFriendRequestById, acceptFriendRequest } from "@/actions/friendActions";
 import { Lock, ExternalLink, UserPlus, Check, Clock } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 type Props = { params: Promise<{ id: string }> };
 
 export default async function FriendProfilePage(props: Props) {
