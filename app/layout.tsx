@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import TopBar from "@/components/TopBar";
 import BottomBar from "@/components/BottomBar";
+import { Suspense } from "react";
 
 // Używamy nowoczesnej i prostej czcionki Inter
 const inter = Inter({ subsets: ["latin"] });
@@ -27,7 +28,9 @@ export default function RootLayout({
         */}
         <div className="mx-auto max-w-md min-h-screen bg-[#f2f5f9] relative shadow-2xl flex flex-col">
           
-          <TopBar />
+          <Suspense fallback={<div className="h-14 bg-white border-b border-gray-200 shadow-sm" />}>
+            <TopBar />
+          </Suspense>
           
           {/* Główna treść strony (strona główna, znajomi, profil).
               Dajemy dolny padding (pb-24), żeby treści nie chowały się pod wystającym plusem! 
