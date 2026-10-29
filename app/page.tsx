@@ -55,7 +55,7 @@ export default async function Home() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {feedDreams.map((dream) => {
+          {feedDreams.map((dream : any) => {
             const isMyDream = dream.authorId === currentUserId;
             const isReservedByMe = dream.reservedById === currentUserId;
             // Blef: Jeśli zarezerwował ktoś inny, pokazujemy jako wolne

@@ -71,7 +71,7 @@ export default async function FriendsPage() {
             <Bell size={14} /> Oczekujące zaproszenia ({user.receivedRequests.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {user.receivedRequests.map((request) => (
+            {user.receivedRequests.map((request : any) => (
               <div
                 key={request.id}
                 className="p-4 border border-amber-200 bg-amber-50/60 rounded-2xl flex flex-col gap-3 shadow-sm"
@@ -130,7 +130,7 @@ export default async function FriendsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {user.friends.map((friend) => (
+            {user.friends.map((friend : any) => (
               <Link
                 key={friend.id}
                 href={`/friends/${friend.id}`}

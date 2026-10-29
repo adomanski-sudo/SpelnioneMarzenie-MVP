@@ -65,7 +65,7 @@ export default async function NotificationsPage() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {user.receivedRequests.map((req) => (
+            {user.receivedRequests.map((req : any) => (
               <div
                 key={req.id}
                 className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl shadow-sm flex flex-col gap-3"
@@ -127,7 +127,7 @@ export default async function NotificationsPage() {
           </p>
         ) : (
           <div className="space-y-2.5">
-            {user.notifications.map((notif) => (
+            {user.notifications.map((notif : any) => (
               <div
                 key={notif.id}
                 className={`p-4 rounded-2xl border transition-colors flex items-center justify-between gap-3 ${

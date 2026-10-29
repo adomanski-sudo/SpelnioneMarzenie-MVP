@@ -48,7 +48,7 @@ export default async function FriendProfilePage(props: Props) {
     : null;
 
   // Pobieramy profil wybranego użytkownika wraz z jego marzeniami
-  const profile = await prisma.user.findUnique({
+  const profile : any = await prisma.user.findUnique({
     where: { id: profileId },
     include: {
       dreams: {
@@ -129,7 +129,7 @@ export default async function FriendProfilePage(props: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {profile.dreams.map((dream) => {
+          {profile.dreams.map((dream : any) => {
             const isReservedByMe = dream.reservedById === currentUserId;
             const showAsAvailable = !dream.reservedById || (dream.reservedById && !isReservedByMe);
 

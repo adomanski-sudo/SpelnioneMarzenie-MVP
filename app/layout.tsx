@@ -32,7 +32,7 @@ export default function RootLayout({
           {/* Główna treść strony (strona główna, znajomi, profil).
               Dajemy dolny padding (pb-24), żeby treści nie chowały się pod wystającym plusem! 
           */}
-          <main className="flex-grow pb-24 overflow-y-auto">
+          <main className="grow pb-24 overflow-y-auto">
             {children}
           </main>
           

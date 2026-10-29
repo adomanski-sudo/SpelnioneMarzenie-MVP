@@ -221,7 +221,7 @@ export default async function SearchPage(props: Props) {
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {dreams.map((dream) => {
+              {dreams.map((dream : any) => {
                 const isMyDream = dream.authorId === currentUserId;
                 const isReservedByMe = dream.reservedById === currentUserId;
                 const showAsAvailable = !dream.reservedById || (dream.reservedById && !isReservedByMe);

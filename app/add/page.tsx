@@ -77,13 +77,13 @@ export default async function AddDreamPage() {
             Kto może zobaczyć to marzenie?
           </label>
           <div className="grid grid-cols-2 gap-3">
-            <label className="flex items-center gap-2 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-colors">
+            <label className="flex items-center gap-2 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 has-checked:border-blue-500 has-checked:bg-blue-50 transition-colors">
               <input type="radio" name="visibility" value="PUBLIC" defaultChecked className="accent-blue-600" />
               <Globe size={16} className="text-blue-600" />
               <span className="text-xs font-bold text-gray-700">Wszyscy (Publiczne)</span>
             </label>
 
-            <label className="flex items-center gap-2 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-colors">
+            <label className="flex items-center gap-2 p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 has-checked:border-blue-500 has-checked:bg-blue-50 transition-colors">
               <input type="radio" name="visibility" value="PRIVATE" className="accent-blue-600" />
               <Lock size={16} className="text-gray-600" />
               <span className="text-xs font-bold text-gray-700">Tylko znajomi</span>
