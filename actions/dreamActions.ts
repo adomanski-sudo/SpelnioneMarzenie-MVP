@@ -195,3 +195,48 @@ export async function markNotificationsAsReadAction() {
   revalidatePath("/notifications");
   revalidatePath("/");
 }
+
+
+// EDYCJA ISTNIEJĄCEGO MARZENIA
+export async function editDreamAction(dreamId: string, formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    throw new Error("Musisz być zalogowany, aby edytować marzenie.");
+  }
+
+  const title = formData.get("title") as string;
+  const description = formData.get("description") as string;
+  const link = formData.get("link") as string;
+  const imageUrl = formData.get("imageUrl") as string;
+  const category = formData.get("category") as "CZAS" | "POMYSL" | "KONKRET" | "USMIECH";
+  const visibility = formData.get("visibility") as "PUBLIC" | "PRIVATE";
+
+  if (!title || !category) return;
+
+  const currentUser = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+
+  if (!currentUser) throw new Error("Nie znaleziono użytkownika.");
+
+  // Aktualizujemy marzenie (warunek authorId gwarantuje, że nikt nie edytuje cudzego marzenia)
+  await prisma.dream.update({
+    where: {
+      id: dreamId,
+      authorId: currentUser.id,
+    },
+    data: {
+      title: title.trim(),
+      description: description?.trim() ? description.trim() : null,
+      link: link?.trim() ? link.trim() : null,
+      imageUrl: imageUrl?.trim() ? imageUrl.trim() : null,
+      category,
+      visibility: visibility || "PUBLIC",
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/profile");
+  revalidatePath("/search");
+  redirect("/profile");
+}
