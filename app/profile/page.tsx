@@ -123,7 +123,7 @@ export default async function ProfilePage() {
                   </div>
 
                   {dream.imageUrl && (
-                    <div className="mb-3 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 h-80 w-full">
+                    <div className="mb-3 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 h-100 w-full">
                       <img
                         src={dream.imageUrl}
                         alt={dream.title}

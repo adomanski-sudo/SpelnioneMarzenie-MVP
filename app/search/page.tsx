@@ -262,7 +262,7 @@ export default async function SearchPage(props: Props) {
 
                       {/* Grafika marzenia */}
                       {dream.imageUrl && (
-                        <div className="mb-3 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 h-40 w-full">
+                        <div className="mb-3 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 h-100 w-full">
                           <img
                             src={dream.imageUrl}
                             alt={dream.title}
