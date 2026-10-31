@@ -93,12 +93,6 @@ export default async function ProfilePage() {
           <h2 className="text-md font-bold text-gray-800">
             Moje aktywne marzenia ({activeDreams.length})
           </h2>
-          <Link
-            href="/add"
-            className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline"
-          >
-            <Plus size={14} /> Dodaj nowe
-          </Link>
         </div>
 
         {activeDreams.length === 0 ? (
@@ -129,7 +123,7 @@ export default async function ProfilePage() {
                   </div>
 
                   {dream.imageUrl && (
-                    <div className="mb-3 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 h-40 w-full">
+                    <div className="mb-3 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 h-80 w-full">
                       <img
                         src={dream.imageUrl}
                         alt={dream.title}
@@ -179,7 +173,7 @@ export default async function ProfilePage() {
                 key={dream.id}
                 className="p-3 bg-white rounded-xl border border-gray-200 flex justify-between items-center opacity-75"
               >
-                <span className="text-sm font-medium text-gray-700 ">
+                <span className="text-sm font-medium text-gray-700">
                   {dream.title}
                 </span>
                 <span className="text-[10px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">

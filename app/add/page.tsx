@@ -28,7 +28,7 @@ export default async function AddDreamPage() {
         </Link>
         <div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            Nowe marzenie <Sparkles size={18} className="text-blue-600" />
+            Nowe marzenie 
           </h1>
           <p className="text-xs text-gray-600">Podziel się tym, co sprawi Ci radość</p>
         </div>
@@ -44,7 +44,7 @@ export default async function AddDreamPage() {
             type="text"
             name="title"
             required
-            placeholder="np. Czytnik Kindle Paperwhite 5"
+            placeholder="np. Wycieczka w góry"
             className="w-full border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:border-blue-600 outline-none p-3 rounded-xl text-sm font-medium transition-colors"
           />
         </div>
@@ -58,10 +58,10 @@ export default async function AddDreamPage() {
             name="category"
             className="w-full border border-gray-300 bg-white text-gray-900 focus:border-blue-600 outline-none p-3 rounded-xl text-sm font-medium transition-colors"
           >
-            <option value="CZAS">⏳ Czas (wspólne wyjście, wyjazd)</option>
-            <option value="POMYSL">💡 Prezent - ogólny pomysł (np. worek bokserski)</option>
+            <option value="CZAS">⏳ Czas - wspólne aktywności, wyjazd</option>
+            <option value="POMYSL">💡 Prezent - ogólny pomysł </option>
             <option value="KONKRET">🎯 Prezent - konkretny model</option>
-            <option value="USMIECH">🍫 Uśmiech (drobiazg bez okazji)</option>
+            <option value="USMIECH">🍫 Uśmiech - drobiazg bez okazji</option>
           </select>
         </div>
 
@@ -125,7 +125,7 @@ export default async function AddDreamPage() {
           <textarea
             name="description"
             rows={3}
-            placeholder="np. Kolor czarny, wersja bez reklam..."
+            placeholder="np. Kolor czarny, zapinany na zmek..."
             className="w-full border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:border-blue-600 outline-none p-3 rounded-xl text-sm font-medium transition-colors resize-none"
           />
         </div>
