@@ -3,110 +3,124 @@ import { prisma } from "@/lib/prisma";
 import ReserveButton from "@/components/ReserveButton";
 import { cancelReservationAction } from "@/actions/dreamActions";
 import Link from "next/link";
-import { Lock, ExternalLink } from "lucide-react"; // Ikonka kłódki do prywatnych marzeń
+import { Lock, ExternalLink } from "lucide-react";
 
 export default async function Home() {
   const session = await auth();
-  const currentUserId = session?.user?.email 
-    ? (await prisma.user.findUnique({ where: { email: session.user.email } }))?.id 
+  const currentUserId = session?.user?.email
+    ? (await prisma.user.findUnique({ where: { email: session.user.email } }))?.id
     : null;
 
-  // Pobieramy "Tablicę Marzeń" (Feed)
   let feedDreams: any[] = [];
 
   if (currentUserId) {
-    // ZALOGOWANY: Widzi swoje, oraz znajomych (zarówno PUBLIC i PRIVATE), oraz PUBLIC obcych (opcjonalnie)
-    // Dla MVP uprośćmy: pokazujemy marzenia znajomych i swoje.
     const userWithFriends = await prisma.user.findUnique({
       where: { id: currentUserId },
-      include: { friends: true }
+      include: { friends: true },
     });
 
-    const friendIds = userWithFriends?.friends.map(f => f.id) || [];
-    
+    const friendIds = userWithFriends?.friends.map((f: any) => f.id) || [];
+
     feedDreams = await prisma.dream.findMany({
       where: {
         isFulfilled: false,
-        OR: [
-          { authorId: currentUserId }, // Moje
-          { authorId: { in: friendIds } } // Znajomych
-        ]
+        OR: [{ authorId: currentUserId }, { authorId: { in: friendIds } }],
       },
       include: { author: true },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
     });
   } else {
-    // GOŚĆ: Widzi tylko 10 ostatnich PUBLICZNYCH marzeń
     feedDreams = await prisma.dream.findMany({
       where: { isFulfilled: false, visibility: "PUBLIC" },
       include: { author: true },
       orderBy: { createdAt: "desc" },
-      take: 10
+      take: 10,
     });
   }
 
-  return (
-    <div className="p-4 space-y-4">
+  const catColors: Record<string, string> = {
+    CZAS: "bg-blue-100 text-blue-700",
+    POMYSL: "bg-purple-100 text-purple-700",
+    KONKRET: "bg-green-100 text-green-700",
+    USMIECH: "bg-yellow-100 text-yellow-700",
+  };
 
-      {/* Siatka Kafelków (Card UI) */}
+  return (
+    <div className="p-4">
       {feedDreams.length === 0 ? (
-        <div className="text-center p-8 bg-gray-50 rounded-2xl border border-gray-100">
-          <p className="text-gray-500">Cisza... nikt jeszcze niczego nie pragnie.</p>
+        <div className="text-center p-8 bg-white rounded-2xl border border-gray-200">
+          <p className="text-gray-600">Cisza... nikt jeszcze niczego nie pragnie.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {feedDreams.map((dream : any) => {
+          {feedDreams.map((dream: any) => {
             const isMyDream = dream.authorId === currentUserId;
             const isReservedByMe = dream.reservedById === currentUserId;
-            // Blef: Jeśli zarezerwował ktoś inny, pokazujemy jako wolne
             const showAsAvailable = !dream.reservedById || (dream.reservedById && !isReservedByMe);
 
-            // Wybór koloru w zależności od kategorii
-            const catColors: Record<string, string> = {
-              "CZAS": "bg-blue-100 text-blue-700",
-              "POMYSL": "bg-purple-100 text-purple-700",
-              "KONKRET": "bg-green-100 text-green-700",
-              "USMIECH": "bg-yellow-100 text-yellow-700"
-            };
-
             return (
-              <div key={dream.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
-                
-                {/* Górna część kafelka */}
+              <div
+                key={dream.id}
+                className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between"
+              >
                 <div>
-                  <div className="flex justify-between items-start mb-3">
-                    <Link href={`/friends/${dream.authorId}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                       <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
-                          {/* Tu w przyszłości wstawimy zdjęcie, na razie szary kółko z inicjałem */}
-                          <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500">
-                            {dream.author.name?.charAt(0).toUpperCase() || "?"}
-                          </div>
-                       </div>
-                       <span className="text-sm font-medium text-gray-700">{dream.author.name}</span>
+                  {/* Nagłówek kafelka z awatarem autora i kategorią */}
+                  <div className="flex justify-between items-start mb-3 gap-2">
+                    <Link
+                      href={isMyDream ? "/profile" : `/friends/${dream.authorId}`}
+                      className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0"
+                    >
+                      {dream.author.image ? (
+                        <img
+                          src={dream.author.image}
+                          alt={dream.author.name || ""}
+                          referrerPolicy="no-referrer"
+                          className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0">
+                          {dream.author.name?.charAt(0).toUpperCase() || "?"}
+                        </div>
+                      )}
+                      <span className="text-sm font-semibold text-gray-800 truncate">
+                        {dream.author.name}
+                      </span>
                     </Link>
-                    
-                    {/* Etykieta kategorii */}
-                    <div className="flex gap-1 items-center">
-                       {dream.visibility === "PRIVATE" && <Lock size={12} className="text-gray-400" />}
-                       <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${catColors[dream.category] || "bg-gray-100 text-gray-700"}`}>
-                         {dream.category}
-                       </span>
+
+                    <div className="flex gap-1 items-center shrink-0">
+                      {dream.visibility === "PRIVATE" && <Lock size={12} className="text-gray-500" />}
+                      <span
+                        className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${
+                          catColors[dream.category] || "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {dream.category}
+                      </span>
                     </div>
                   </div>
-                  
-                  <h3 className="font-bold text-gray-900 text-lg leading-tight mb-2">
-                    {dream.title}
-                  </h3>
-                  
-                  {dream.description && (
-                    <p className="text-gray-500 text-sm line-clamp-2 mb-4">
-                      {dream.description}
-                    </p>
+
+                  {/* Grafika marzenia (jeśli dodana) */}
+                  {dream.imageUrl && (
+                    <div className="mb-3 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 h-40 w-full">
+                      <img
+                        src={dream.imageUrl}
+                        alt={dream.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   )}
+
+                  <h3 className="font-bold text-gray-900 text-lg leading-tight mb-2">{dream.title}</h3>
+
+                  {dream.description && (
+                    <p className="text-gray-600 text-sm line-clamp-2 mb-3">{dream.description}</p>
+                  )}
+
                   {dream.link && (
-                    <a 
-                      href={dream.link} 
-                      target="_blank" 
+                    <a
+                      href={dream.link}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline mb-2"
                     >
@@ -116,25 +130,29 @@ export default async function Home() {
                 </div>
 
                 {/* Dolna część kafelka (Akcje) */}
-                <div className="mt-4 pt-4 border-t border-gray-50">
+                <div className="mt-4 pt-4 border-t border-gray-100">
                   {isMyDream ? (
-                    <div className="text-center text-xs font-bold text-gray-400 p-2">To Twoje marzenie</div>
+                    <div className="text-center text-xs font-bold text-gray-500 p-2">
+                      To Twoje marzenie
+                    </div>
                   ) : !currentUserId ? (
-                     <div className="text-center text-xs text-gray-400">Zaloguj się by zarezerwować</div>
+                    <div className="text-center text-xs text-gray-500">Zaloguj się by zarezerwować</div>
                   ) : isReservedByMe ? (
-                    <form action={async () => { "use server"; await cancelReservationAction(dream.id, dream.authorId); }}>
-                      <p className="text-green-600 text-xs font-bold mb-2 text-center flex items-center justify-center gap-1">
-                        <span className="text-lg leading-none">✓</span> Zarezerwowane
-                      </p>
-                      <button className="w-full bg-white border border-green-200 hover:bg-green-50 text-green-700 font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm">
+                    <form
+                      action={async () => {
+                        "use server";
+                        await cancelReservationAction(dream.id, dream.authorId);
+                      }}
+                    >
+                      <p className="text-green-700 text-xs font-bold mb-2 text-center">✓ Zarezerwowane</p>
+                      <button className="w-full bg-white border border-green-300 hover:bg-green-50 text-green-800 font-bold py-2.5 rounded-xl text-sm transition-colors shadow-sm cursor-pointer">
                         Anuluj
                       </button>
                     </form>
-                  ) : showAsAvailable && (
-                    <ReserveButton dreamId={dream.id} friendId={dream.authorId} />
+                  ) : (
+                    showAsAvailable && <ReserveButton dreamId={dream.id} friendId={dream.authorId} />
                   )}
                 </div>
-
               </div>
             );
           })}

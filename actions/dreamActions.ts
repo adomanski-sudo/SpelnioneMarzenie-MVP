@@ -11,45 +11,47 @@ export async function addDreamAction(formData: FormData) {
     throw new Error("Musisz być zalogowany, aby dodać marzenie.");
   }
 
-  // 1. Pobieramy wszystkie pola z formularza
+  // 1. Pobieramy wszystkie pola z formularza (w tym opcjonalny imageUrl)
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const link = formData.get("link") as string;
+  const imageUrl = formData.get("imageUrl") as string;
   const category = formData.get("category") as "CZAS" | "POMYSL" | "KONKRET" | "USMIECH";
   const visibility = formData.get("visibility") as "PUBLIC" | "PRIVATE";
 
   if (!title || !category) return;
 
-  // 2. Pobieramy autora WRAZ z listą ID jego znajomych
+  // 2. Pobieramy autora wraz z listą ID jego znajomych
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
     include: {
       friends: {
-        select: { id: true }, // Pobieramy tylko kolumnę id dla lekkości zapytania
+        select: { id: true },
       },
     },
   });
 
   if (!user) throw new Error("Nie znaleziono użytkownika w bazie.");
 
-  // 3. Zapisujemy nowe marzenie w bazie
+  // 3. Zapisujemy nowe marzenie w bazie wraz z linkiem do grafiki
   await prisma.dream.create({
     data: {
       title,
       description: description?.trim() ? description.trim() : null,
       link: link?.trim() ? link.trim() : null,
+      imageUrl: imageUrl?.trim() ? imageUrl.trim() : null,
       category,
       visibility: visibility || "PUBLIC",
       authorId: user.id,
     },
   });
 
-  // 4. NOWOŚĆ: Rozsyłamy powiadomienie do wszystkich znajomych autora
+  // 4. Rozsyłamy powiadomienie do wszystkich znajomych autora
   if (user.friends.length > 0) {
     const authorName = user.name || user.email;
 
     await prisma.notification.createMany({
-      data: user.friends.map((friend) => ({
+      data: user.friends.map((friend: { id: string }) => ({
         userId: friend.id,
         message: `${authorName} dodał(a) nowe marzenie: „${title}”.`,
         link: `/friends/${user.id}`,

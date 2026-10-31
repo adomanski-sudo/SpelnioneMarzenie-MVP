@@ -105,6 +105,17 @@ export default async function ProfilePage() {
                     )}
                   </div>
 
+                  {dream.imageUrl && (
+                    <div className="mb-3 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 h-40 w-full">
+                      <img
+                        src={dream.imageUrl}
+                        alt={dream.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
                   <h3 className="font-bold text-gray-900 text-base leading-snug mb-2">
                     {dream.title}
                   </h3>

@@ -4,17 +4,15 @@ import { sendFriendRequest, acceptFriendRequest, rejectFriendRequest } from "@/a
 import Link from "next/link";
 import { Users, UserPlus, ArrowRight, Bell } from "lucide-react";
 
-//  export const dynamic = "force-dynamic";
-
 export default async function FriendsPage() {
   const session = await auth();
 
   if (!session?.user?.email) {
     return (
       <div className="p-6 text-center space-y-3 mt-8">
-        <Users size={36} className="mx-auto text-gray-300" />
-        <h1 className="text-lg font-bold text-gray-800">Twoi Znajomi</h1>
-        <p className="text-gray-500 text-sm">
+        <Users size={36} className="mx-auto text-gray-400" />
+        <h1 className="text-lg font-bold text-gray-900">Twoi Znajomi</h1>
+        <p className="text-gray-600 text-sm">
           Zaloguj się przyciskiem w prawym górnym rogu, aby zarządzać listą znajomych.
         </p>
       </div>
@@ -37,8 +35,8 @@ export default async function FriendsPage() {
   return (
     <div className="p-4 space-y-6">
       {/* 1. SEKCJA: SZYBKIE ZAPROSZENIE PO E-MAILU */}
-      <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+      <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+        <h2 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3 flex items-center gap-1.5">
           <UserPlus size={14} className="text-blue-600" /> Zaproś znajomego po adresie e-mail
         </h2>
         <form
@@ -53,7 +51,7 @@ export default async function FriendsPage() {
             name="email"
             placeholder="np. jan.kowalski@gmail.com"
             required
-            className="border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-500 outline-none p-2.5 rounded-xl w-full text-sm transition-colors"
+            className="border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:border-blue-600 outline-none p-2.5 rounded-xl w-full text-sm font-medium transition-colors"
           />
           <button
             type="submit"
@@ -71,7 +69,7 @@ export default async function FriendsPage() {
             <Bell size={14} /> Oczekujące zaproszenia ({user.receivedRequests.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {user.receivedRequests.map((request : any) => (
+            {user.receivedRequests.map((request: any) => (
               <div
                 key={request.id}
                 className="p-4 border border-amber-200 bg-amber-50/60 rounded-2xl flex flex-col gap-3 shadow-sm"
@@ -82,7 +80,7 @@ export default async function FriendsPage() {
                   </div>
                   <div className="truncate">
                     <p className="font-bold text-gray-900 text-sm truncate">{request.sender.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{request.sender.email}</p>
+                    <p className="text-xs text-gray-600 truncate">{request.sender.email}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -104,7 +102,7 @@ export default async function FriendsPage() {
                     }}
                     className="flex-1"
                   >
-                    <button className="w-full bg-white border border-gray-200 hover:bg-red-50 text-gray-600 hover:text-red-600 font-bold py-2 rounded-xl text-xs transition-colors cursor-pointer">
+                    <button className="w-full bg-white border border-gray-300 hover:bg-red-50 text-gray-700 hover:text-red-600 font-bold py-2 rounded-xl text-xs transition-colors cursor-pointer">
                       Odrzuć
                     </button>
                   </form>
@@ -117,20 +115,20 @@ export default async function FriendsPage() {
 
       {/* 3. SEKCJA: KAFELKI ZNAJOMYCH */}
       <div className="space-y-3">
-        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <h2 className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
           <Users size={14} /> Twoi znajomi ({user.friends.length})
         </h2>
 
         {user.friends.length === 0 ? (
-          <div className="text-center p-8 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
-            <p className="text-gray-500 text-sm">Nie masz jeszcze żadnych znajomych na liście.</p>
+          <div className="text-center p-8 bg-white rounded-2xl border border-gray-200 space-y-2">
+            <p className="text-gray-600 text-sm">Nie masz jeszcze żadnych znajomych na liście.</p>
             <Link href="/search" className="inline-block text-xs font-bold text-blue-600 hover:underline">
               Użyj wyszukiwarki, aby znaleźć znajomych &rarr;
             </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {user.friends.map((friend : any) => (
+            {user.friends.map((friend: any) => (
               <Link
                 key={friend.id}
                 href={`/friends/${friend.id}`}
@@ -141,16 +139,17 @@ export default async function FriendsPage() {
                     <img
                       src={friend.image}
                       alt={friend.name || ""}
+                      referrerPolicy="no-referrer"
                       className="w-11 h-11 rounded-full object-cover border border-gray-200 shrink-0"
                     />
                   ) : (
-                    <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
+                    <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">
                       {friend.name?.charAt(0).toUpperCase() || "?"}
                     </div>
                   )}
                   <div className="truncate">
                     <p className="font-bold text-gray-900 text-sm truncate">{friend.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{friend.email}</p>
+                    <p className="text-xs text-gray-600 truncate">{friend.email}</p>
                   </div>
                 </div>
                 <ArrowRight size={16} className="text-gray-400 shrink-0 ml-2" />

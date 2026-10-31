@@ -37,6 +37,7 @@ model Dream {
   visibility    Visibility    @default(PUBLIC)
   isFulfilled   Boolean       @default(false)
   link          String?       // Link do sklepu/produktu
+  imageUrl     String?
 
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
