@@ -1,11 +1,10 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import TopBar from "@/components/TopBar";
 import BottomBar from "@/components/BottomBar";
-import { Suspense } from "react";
 
-// Używamy nowoczesnej i prostej czcionki Inter
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -20,22 +19,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl">
-      <body className={`${inter.className} bg-gray-100 text-gray-900`}>
-        {/* 
-          Zamykamy całą aplikację w kontenerze. 
-          Na komputerze będzie to wyśrodkowany prostokąt (imitacja ekranu telefonu). 
-          Na komórce zajmie 100% szerokości. 
-        */}
-        <div className="mx-auto max-w-md min-h-screen bg-[#f2f5f9] relative shadow-2xl flex flex-col">
+      <body className={`${inter.className} bg-[#f2f5f9] text-gray-900 min-h-screen`}>
+        {/* Na telefonie wąska kolumna max-w-md, na komputerze szeroki układ bez cienia bocznego */}
+        <div className="mx-auto max-w-md md:max-w-none min-h-screen bg-[#f2f5f9] relative shadow-2xl md:shadow-none flex flex-col">
           
-          <Suspense fallback={<div className="h-14 bg-white border-b border-gray-200 shadow-sm" />}>
-            <TopBar />
-          </Suspense>
+          <TopBar />
           
-          {/* Główna treść strony (strona główna, znajomi, profil).
-              Dajemy dolny padding (pb-24), żeby treści nie chowały się pod wystającym plusem! 
-          */}
-          <main className="grow pb-24 overflow-y-auto">
+          {/* Na komputerze treść ma komfortową szerokość max-w-5xl i mniejszy dolny padding */}
+          <main className="flex-grow w-full md:max-w-5xl md:mx-auto pb-24 md:pb-12 overflow-y-auto">
             {children}
           </main>
           

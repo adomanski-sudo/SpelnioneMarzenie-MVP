@@ -12,7 +12,7 @@ export default function BottomBar() {
   const isFriendsActive = pathname.startsWith("/friends");
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 pointer-events-none">
+    <nav className="md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 pointer-events-none">
       <div className="relative h-20 w-full flex items-end">
         
         {/* 1. WEKTOROWE TŁO PASKA Z ZAOKRĄGLENIAMI I WCIĘCIEM NA ŚRODKU */}
