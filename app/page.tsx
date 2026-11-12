@@ -4,6 +4,7 @@ import ReserveButton from "@/components/ReserveButton";
 import { cancelReservationAction } from "@/actions/dreamActions";
 import Link from "next/link";
 import { Lock, ExternalLink } from "lucide-react";
+import { formatAge } from "@/lib/age";
 
 export default async function Home() {
   const session = await auth();
@@ -26,13 +27,19 @@ export default async function Home() {
         isFulfilled: false,
         OR: [{ authorId: currentUserId }, { authorId: { in: friendIds } }],
       },
-      include: { author: true },
+      include: {
+        author: true,
+        child: true,
+      },
       orderBy: { createdAt: "desc" },
     });
   } else {
     feedDreams = await prisma.dream.findMany({
       where: { isFulfilled: false, visibility: "PUBLIC" },
-      include: { author: true },
+      include: {
+        author: true,
+        child: true,
+      },
       orderBy: { createdAt: "desc" },
       take: 10,
     });
@@ -96,6 +103,24 @@ export default async function Home() {
                       >
                         {dream.category}
                       </span>
+                        {dream.child && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 flex items-center gap-1">
+                          {dream.child.image ? (
+                            <img
+                              src={dream.child.image}
+                              alt={dream.child.name}
+                              referrerPolicy="no-referrer"
+                              className="w-3.5 h-3.5 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span>🎈</span>
+                          )}
+                          <span>
+                            Dla: {dream.child.name}
+                            {formatAge(dream.child.birthDate) ? ` (${formatAge(dream.child.birthDate)})` : ""}
+                          </span>
+                        </span>
+                      )}
                     </div>
                   </div>
 

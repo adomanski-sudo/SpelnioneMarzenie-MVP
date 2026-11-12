@@ -11,56 +11,65 @@ export async function addDreamAction(formData: FormData) {
     throw new Error("Musisz być zalogowany, aby dodać marzenie.");
   }
 
-  // 1. Pobieramy wszystkie pola z formularza (w tym opcjonalny imageUrl)
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
   const link = formData.get("link") as string;
   const imageUrl = formData.get("imageUrl") as string;
   const category = formData.get("category") as "CZAS" | "POMYSL" | "KONKRET" | "USMIECH";
   const visibility = formData.get("visibility") as "PUBLIC" | "PRIVATE";
+  
+  // NOWOŚĆ: Odbiorca (dziecko) oraz rezerwacja własna rodzica
+  const rawChildId = formData.get("childId") as string;
+  const reserveForMe = formData.get("reserveForMe") === "true";
 
   if (!title || !category) return;
 
-  // 2. Pobieramy autora wraz z listą ID jego znajomych
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
     include: {
-      friends: {
-        select: { id: true },
-      },
+      children: true,
+      friends: { select: { id: true } },
     },
   });
 
   if (!user) throw new Error("Nie znaleziono użytkownika w bazie.");
 
-  // 3. Zapisujemy nowe marzenie w bazie wraz z linkiem do grafiki
+  // Weryfikujemy, czy wybrane dziecko faktycznie należy do zalogowanego rodzica
+  const validChild = user.children.find((c) => c.id === rawChildId);
+  const childId = validChild ? validChild.id : null;
+
   await prisma.dream.create({
     data: {
-      title,
+      title: title.trim(),
       description: description?.trim() ? description.trim() : null,
       link: link?.trim() ? link.trim() : null,
       imageUrl: imageUrl?.trim() ? imageUrl.trim() : null,
       category,
       visibility: visibility || "PUBLIC",
       authorId: user.id,
+      childId,
+      // Jeśli marzenie jest dla dziecka i rodzic zaznaczył checkbox, przypisujemy rezerwację rodzicowi
+      reservedById: childId && reserveForMe ? user.id : null,
     },
   });
 
-  // 4. Rozsyłamy powiadomienie do wszystkich znajomych autora
   if (user.friends.length > 0) {
     const authorName = user.name || user.email;
+    const notifMessage = validChild
+      ? `${authorName} dodał(a) nowe marzenie dla dziecka (${validChild.name}): „${title}”.`
+      : `${authorName} dodał(a) nowe marzenie: „${title}”.`;
 
     await prisma.notification.createMany({
       data: user.friends.map((friend: { id: string }) => ({
         userId: friend.id,
-        message: `${authorName} dodał(a) nowe marzenie: „${title}”.`,
+        message: notifMessage,
         link: `/friends/${user.id}`,
       })),
     });
   }
 
-  // 5. Odświeżamy dane i wracamy na stronę główną
   revalidatePath("/");
+  revalidatePath("/profile");
   redirect("/");
 }
 
@@ -211,15 +220,47 @@ export async function editDreamAction(dreamId: string, formData: FormData) {
   const category = formData.get("category") as "CZAS" | "POMYSL" | "KONKRET" | "USMIECH";
   const visibility = formData.get("visibility") as "PUBLIC" | "PRIVATE";
 
+  const rawChildId = formData.get("childId") as string;
+  const reserveForMe = formData.get("reserveForMe") === "true";
+
   if (!title || !category) return;
 
   const currentUser = await prisma.user.findUnique({
     where: { email: session.user.email },
+    include: { children: true },
   });
 
   if (!currentUser) throw new Error("Nie znaleziono użytkownika.");
 
-  // Aktualizujemy marzenie (warunek authorId gwarantuje, że nikt nie edytuje cudzego marzenia)
+  const existingDream = await prisma.dream.findUnique({
+    where: { id: dreamId },
+  });
+
+  if (!existingDream || existingDream.authorId !== currentUser.id) {
+    throw new Error("Brak uprawnień do edycji tego marzenia.");
+  }
+
+  const validChild = currentUser.children.find((c) => c.id === rawChildId);
+  const childId = validChild ? validChild.id : null;
+
+  // Bezpieczne wyliczenie nowego stanu reservedById (chroni rezerwację innych członków rodziny!)
+  let updatedReservedById = existingDream.reservedById;
+
+  if (!childId) {
+    // Jeśli marzenie zmieniono na osobiste marzenie rodzica, rodzic nie może go sam sobie rezerwować
+    if (existingDream.reservedById === currentUser.id) {
+      updatedReservedById = null;
+    }
+  } else {
+    // Marzenie należy do dziecka: modyfikujemy rezerwację tylko wtedy, gdy nikt inny jej wcześniej nie zajął
+    const isReservedByOther =
+      existingDream.reservedById !== null && existingDream.reservedById !== currentUser.id;
+
+    if (!isReservedByOther) {
+      updatedReservedById = reserveForMe ? currentUser.id : null;
+    }
+  }
+
   await prisma.dream.update({
     where: {
       id: dreamId,
@@ -232,6 +273,8 @@ export async function editDreamAction(dreamId: string, formData: FormData) {
       imageUrl: imageUrl?.trim() ? imageUrl.trim() : null,
       category,
       visibility: visibility || "PUBLIC",
+      childId,
+      reservedById: updatedReservedById,
     },
   });
 
@@ -239,4 +282,127 @@ export async function editDreamAction(dreamId: string, formData: FormData) {
   revalidatePath("/profile");
   revalidatePath("/search");
   redirect("/profile");
+}
+
+// EDYCJA GŁÓWNEGO PROFILU UŻYTKOWNIKA
+export async function updateUserProfileAction(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  const rawBirthDate = formData.get("userBirthDate") as string;
+  const image = (formData.get("userImage") as string)?.trim();
+  const showAge = formData.get("showAge") === "true";
+
+  await prisma.user.update({
+    where: { email: session.user.email },
+    data: {
+      image: image ? image : null,
+      birthDate: rawBirthDate ? new Date(rawBirthDate) : null,
+      showAge,
+    },
+  });
+
+  revalidatePath("/profile");
+  revalidatePath("/");
+  revalidatePath("/friends");
+  revalidatePath("/search");
+}
+
+// Zażądzanie profilami dzieci
+
+export async function addChildAction(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  const name = (formData.get("childName") as string)?.trim();
+  const rawBirthDate = formData.get("birthDate") as string;
+  const image = (formData.get("childImage") as string)?.trim();
+
+  if (!name) return;
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) return;
+
+  await prisma.child.create({
+    data: {
+      name,
+      birthDate: rawBirthDate ? new Date(rawBirthDate) : null,
+      image: image ? image : null,
+      parentId: user.id,
+    },
+  });
+
+  revalidatePath("/profile");
+  revalidatePath("/add");
+}
+
+export async function deleteChildAction(childId: string) {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) return;
+
+  await prisma.child.delete({
+    where: {
+      id: childId,
+      parentId: user.id,
+    },
+  });
+
+  revalidatePath("/profile");
+  revalidatePath("/add");
+  revalidatePath("/");
+}
+
+export async function updateUserBirthDateAction(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  const rawBirthDate = formData.get("userBirthDate") as string;
+
+  await prisma.user.update({
+    where: { email: session.user.email },
+    data: {
+      birthDate: rawBirthDate ? new Date(rawBirthDate) : null,
+    },
+  });
+
+  revalidatePath("/profile");
+}
+
+export async function editChildAction(childId: string, formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  const name = (formData.get("childName") as string)?.trim();
+  const rawBirthDate = formData.get("birthDate") as string;
+  const image = (formData.get("childImage") as string)?.trim();
+
+  if (!name) return;
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) return;
+
+  await prisma.child.update({
+    where: {
+      id: childId,
+      parentId: user.id, // Bezpiecznik: tylko rodzic może edytować profil dziecka
+    },
+    data: {
+      name,
+      birthDate: rawBirthDate ? new Date(rawBirthDate) : null,
+      image: image ? image : null,
+    },
+  });
+
+  revalidatePath("/profile");
+  revalidatePath("/add");
+  revalidatePath("/");
 }

@@ -50,6 +50,9 @@ model Dream {
   // Właściciel marzenia nigdy nie dowie się o zawartości tego pola na frontendzie!
   reservedById  String?
   reservedBy    User?         @relation("UserReservations", fields: [reservedById], references: [id], onDelete: SetNull)
+
+  childId      String?
+  child        Child?          @relation("ChildDreams", fields: [childId], references: [id], onDelete: Cascade)
 }
 
 // ------------------------------------------------------
@@ -62,6 +65,8 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  birthDate     DateTime?
+  showAge       Boolean   @default(true)
   accounts      Account[]
   sessions      Session[]
 
@@ -80,6 +85,8 @@ model User {
   sentRequests     FriendRequest[] @relation("SentRequests")
   receivedRequests FriendRequest[] @relation("ReceivedRequests")
   notifications    Notification[] @relation("UserNotifications")
+
+  children         Child[]        @relation("UserChildren")
 }
 
 model Account {
@@ -146,4 +153,17 @@ model Notification {
   createdAt DateTime @default(now())
 
   user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Child {
+  id        String   @id @default(cuid())
+  name      String
+  birthDate DateTime?
+  image     String?   @db.Text
+  createdAt DateTime @default(now())
+
+  parentId  String
+  parent    User     @relation("UserChildren", fields: [parentId], references: [id], onDelete: Cascade)
+
+  dreams    Dream[]  @relation("ChildDreams")
 }

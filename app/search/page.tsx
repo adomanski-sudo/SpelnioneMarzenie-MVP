@@ -4,6 +4,7 @@ import Link from "next/link";
 import ReserveButton from "@/components/ReserveButton";
 import { cancelReservationAction } from "@/actions/dreamActions";
 import { Search, Users, Sparkles, Lock, ExternalLink, ArrowRight } from "lucide-react";
+import { formatAge } from "@/lib/age";
 
 type Props = {
   searchParams: Promise<{
@@ -68,7 +69,10 @@ export default async function SearchPage(props: Props) {
               : { visibility: "PUBLIC" },
           ],
         },
-        include: { author: true },
+        include: {
+          author: true,
+          child: true,
+},
         orderBy: { createdAt: "desc" },
         take: 20,
       })
@@ -257,6 +261,24 @@ export default async function SearchPage(props: Props) {
                           >
                             {dream.category}
                           </span>
+                            {dream.child && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 flex items-center gap-1">
+                                {dream.child.image ? (
+                                  <img
+                                    src={dream.child.image}
+                                    alt={dream.child.name}
+                                    referrerPolicy="no-referrer"
+                                    className="w-3.5 h-3.5 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <span>🎈</span>
+                                )}
+                                <span>
+                                  Dla: {dream.child.name}
+                                  {formatAge(dream.child.birthDate) ? ` (${formatAge(dream.child.birthDate)})` : ""}
+                                </span>
+                              </span>
+                            )}
                         </div>
                       </div>
 

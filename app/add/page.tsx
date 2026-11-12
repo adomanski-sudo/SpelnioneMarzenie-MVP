@@ -2,11 +2,14 @@ import { auth } from "@/auth";
 import { addDreamAction } from "@/actions/dreamActions";
 import Link from "next/link";
 import { ArrowLeft, Sparkles, Link as LinkIcon, Image as ImageIcon, Lock, Globe } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import DreamRecipientSelector from "@/components/DreamRecipientSelector";
 
 export default async function AddDreamPage() {
   const session = await auth();
 
   if (!session?.user) {
+
     return (
       <div className="p-6 text-center space-y-4">
         <p className="text-gray-700">Musisz być zalogowany, aby dodawać marzenia.</p>
@@ -16,6 +19,13 @@ export default async function AddDreamPage() {
       </div>
     );
   }
+
+  const userWithChildren = await prisma.user.findUnique({
+    where: { email: session.user.email! },
+    include: { children: { orderBy: { createdAt: "asc" } } },
+  });
+
+  const childrenList = userWithChildren?.children || [];
 
   return (
     <div className="p-4">
@@ -35,6 +45,7 @@ export default async function AddDreamPage() {
       </div>
 
       <form action={addDreamAction} className="space-y-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+        <DreamRecipientSelector childrenList={childrenList} />
         {/* 1. Nazwa marzenia */}
         <div>
           <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">

@@ -4,6 +4,7 @@ import { editDreamAction } from "@/actions/dreamActions";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Pencil, Link as LinkIcon, Image as ImageIcon, Lock, Globe } from "lucide-react";
+import DreamRecipientSelector from "@/components/DreamRecipientSelector";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -18,6 +19,7 @@ export default async function EditDreamPage(props: Props) {
 
   const currentUser = await prisma.user.findUnique({
     where: { email: session.user.email },
+    include: { children: { orderBy: { createdAt: "asc" } } },
   });
 
   if (!currentUser) redirect("/");
@@ -57,6 +59,14 @@ export default async function EditDreamPage(props: Props) {
         }}
         className="space-y-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-sm"
       >
+        <DreamRecipientSelector
+          childrenList={currentUser.children}
+          defaultChildId={dream.childId}
+          defaultReservedByMe={dream.reservedById === currentUser.id}
+          isReservedBySomeoneElse={
+            Boolean(dream.reservedById) && dream.reservedById !== currentUser.id
+          }
+        />
         {/* 1. Nazwa marzenia */}
         <div>
           <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">

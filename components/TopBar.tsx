@@ -7,11 +7,13 @@ import { prisma } from "@/lib/prisma";
 export default async function TopBar() {
   const session = await auth();
   let unreadCount = 0;
+  let currentAvatar = session?.user?.image || null;
 
   if (session?.user?.email) {
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      include: {
+      select: {
+        image: true,
         _count: {
           select: {
             receivedRequests: { where: { status: "PENDING" } },
@@ -23,6 +25,7 @@ export default async function TopBar() {
 
     if (user) {
       unreadCount = user._count.receivedRequests + user._count.notifications;
+      currentAvatar = user.image;
     }
   }
 
@@ -78,9 +81,9 @@ export default async function TopBar() {
         {/* 3. Prawa strona: Profil lub Logowanie */}
         {session?.user ? (
           <Link href="/profile" className="p-1 text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-2">
-            {session.user.image ? (
+            {currentAvatar ? (
               <img
-                src={session.user.image}
+                src={currentAvatar}
                 alt={session.user.name || "Profil"}
                 referrerPolicy="no-referrer"
                 className="w-8 h-8 rounded-full border border-gray-200 object-cover"
