@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "pl.spelnionemarzenie.www.twa",
+        "sha256_cert_fingerprints": ["DF:4C:A7:6D:60:DF:96:1A:0A:8B:3D:79:98:4D:BC:15:CE:4C:4F:06:C2:54:BB:51:EA:28:FF:05:72:08:7B:3F"]
+      }
+    }]
