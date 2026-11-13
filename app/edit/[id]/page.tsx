@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Pencil, Link as LinkIcon, Image as ImageIcon, Lock, Globe } from "lucide-react";
 import DreamRecipientSelector from "@/components/DreamRecipientSelector";
+import ImagePicker from "@/components/ImagePicker";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -132,21 +133,7 @@ export default async function EditDreamPage(props: Props) {
         </div>
 
         {/* 4. Link do grafiki / zdjęcia */}
-        <div>
-          <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
-            Link do zdjęcia / grafiki (opcjonalnie)
-          </label>
-          <div className="relative">
-            <ImageIcon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input
-              type="url"
-              name="imageUrl"
-              defaultValue={dream.imageUrl || ""}
-              placeholder="https://.../zdjecie-produktu.jpg"
-              className="w-full border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 focus:border-blue-600 outline-none py-3 pl-10 pr-3 rounded-xl text-sm font-medium transition-colors"
-            />
-          </div>
-        </div>
+        <ImagePicker defaultValue={dream.imageUrl} />
 
         {/* 5. Link do sklepu / aukcji */}
         <div>
