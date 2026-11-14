@@ -386,7 +386,7 @@ export async function addChildAction(formData: FormData) {
 
   const name = (formData.get("childName") as string)?.trim();
   const rawBirthDate = formData.get("birthDate") as string;
-  const image = (formData.get("childImage") as string)?.trim();
+  const childImage = (formData.get("childImage") as string)?.trim();
 
   if (!name) return;
 
@@ -398,14 +398,15 @@ export async function addChildAction(formData: FormData) {
   await prisma.child.create({
     data: {
       name,
+      image: childImage ? childImage : null,
       birthDate: rawBirthDate ? new Date(rawBirthDate) : null,
-      image: image ? image : null,
       parentId: user.id,
     },
   });
 
   revalidatePath("/profile");
   revalidatePath("/add");
+  revalidatePath("/");
 }
 
 export async function deleteChildAction(childId: string) {
@@ -491,4 +492,44 @@ export async function sendTestEmailAction() {
       </div>
     `,
   });
+}
+
+// AKTUALIZACJA AWATARA ZALOGOWANEGO UŻYTKOWNIKA
+export async function updateUserAvatarAction(imageUrl: string | null) {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  await prisma.user.update({
+    where: { email: session.user.email },
+    data: { image: imageUrl?.trim() ? imageUrl.trim() : null },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/profile");
+  revalidatePath("/friends");
+  revalidatePath("/search");
+}
+
+// AKTUALIZACJA AWATARA ISTNIEJĄCEGO DZIECKA
+export async function updateChildAvatarAction(childId: string, imageUrl: string | null) {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) return;
+
+  await prisma.child.update({
+    where: {
+      id: childId,
+      parentId: user.id, // Bezpiecznik: tylko rodzic może zmienić zdjęcie swojego dziecka
+    },
+    data: { image: imageUrl?.trim() ? imageUrl.trim() : null },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/profile");
+  revalidatePath(`/friends/${user.id}`);
+  revalidatePath("/search");
 }

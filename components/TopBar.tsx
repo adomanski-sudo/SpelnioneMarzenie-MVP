@@ -6,14 +6,14 @@ import { prisma } from "@/lib/prisma";
 
 export default async function TopBar() {
   const session = await auth();
-  let unreadCount = 0;
-  let currentAvatar = session?.user?.image || null;
+let unreadCount = 0;
+  let userAvatar: string | null = session?.user?.image || null;
 
   if (session?.user?.email) {
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: {
-        image: true,
+        image: true, // Pobieramy aktualny awatar z bazy MySQL
         _count: {
           select: {
             receivedRequests: { where: { status: "PENDING" } },
@@ -25,7 +25,7 @@ export default async function TopBar() {
 
     if (user) {
       unreadCount = user._count.receivedRequests + user._count.notifications;
-      currentAvatar = user.image;
+      userAvatar = user.image || session.user.image || null;
     }
   }
 
@@ -79,23 +79,20 @@ export default async function TopBar() {
         </nav>
 
         {/* 3. Prawa strona: Profil lub Logowanie */}
-        {session?.user ? (
-          <Link href="/profile" className="p-1 text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-2">
-            {currentAvatar ? (
-              <img
-                src={currentAvatar}
-                alt={session.user.name || "Profil"}
-                referrerPolicy="no-referrer"
-                className="w-8 h-8 rounded-full border border-gray-200 object-cover"
-              />
-            ) : (
-              <UserCircle size={28} strokeWidth={1.5} />
-            )}
-            <span className="hidden lg:inline text-sm font-semibold text-gray-700">
-              {session.user.name}
-            </span>
-          </Link>
-        ) : (
+          {session?.user ? (
+        <Link href="/profile" className="p-1 text-gray-600 hover:text-blue-600 transition-colors flex items-center">
+          {userAvatar ? (
+            <img
+              src={userAvatar}
+              alt={session.user.name || "Profil"}
+              referrerPolicy="no-referrer"
+              className="w-8 h-8 rounded-full border border-gray-200 object-cover"
+            />
+          ) : (
+            <UserCircle size={28} strokeWidth={1.5} />
+          )}
+        </Link>
+      ) : (
           <form
             action={async () => {
               "use server";

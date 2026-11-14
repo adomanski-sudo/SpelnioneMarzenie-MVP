@@ -64,7 +64,7 @@ model User {
   name          String?
   email         String?   @unique
   emailVerified DateTime?
-  image         String?
+  image         String?   @db.LongText
   birthDate     DateTime?
   showAge       Boolean   @default(true)
   accounts      Account[]
@@ -159,7 +159,7 @@ model Child {
   id        String   @id @default(cuid())
   name      String
   birthDate DateTime?
-  image     String?   @db.Text
+  image     String?   @db.LongText
   createdAt DateTime @default(now())
 
   parentId  String
