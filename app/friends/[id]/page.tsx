@@ -38,6 +38,7 @@ export default async function FriendProfilePage(props: Props) {
     }
   }
 
+  
   const pendingRequest = currentUserId
     ? await prisma.friendRequest.findFirst({
         where: {
