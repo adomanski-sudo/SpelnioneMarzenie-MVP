@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     authHeader !== `Bearer ${process.env.CRON_SECRET}` &&
     secretParam !== process.env.CRON_SECRET
   ) {
-    return NextResponse.json({ error: "Brak autoryzacji" }, { status: 401 });
+    return NextResponse.json({ error: "Brak autoryzacji!" }, { status: 401 });
   }
 
   const today = new Date();
