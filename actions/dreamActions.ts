@@ -220,7 +220,7 @@ export async function fulfillDreamAction(dreamId: string) {
         subject: `Marzenie „${dream.title}” zostało spełnione! 🎉`,
         html: buildEmailTemplate({
           heading: "Marzenie spełnione!",
-          message: `<strong>${authorName}</strong> właśnie oznaczył(a) marzenie <strong>„${dream.title}”</strong> (zarezerwowane przez Ciebie) jako spełnione. Dziękujemy za wywołanie uśmiechu!`,
+          message: `<strong>${authorName}</strong> właśnie oznaczył(a) marzenie <strong>„${dream.title}”</strong> (zarezerwowane przez Ciebie) jako spełnione. Dziękuje za wywołanie uśmiechu!`,
           buttonText: "Zobacz profil znajomego",
           buttonPath: `/friends/${currentUser.id}`,
         }),
