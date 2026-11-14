@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendEmail, buildEmailTemplate } from "@/lib/mail";
 
 // 1. WYSYŁANIE ZAPROSZENIA
 export async function sendFriendRequest(formData: FormData) {
@@ -74,6 +75,19 @@ export async function sendFriendRequest(formData: FormData) {
     });
   }
 
+  const senderName = sender.name || sender.email;
+
+  await sendEmail({
+    to: receiver.email!,
+    subject: `${senderName} zaprasza Cię do znajomych w SpełnioneMarzenie.pl`,
+    html: buildEmailTemplate({
+      heading: "Nowe zaproszenie do znajomych",
+      message: `Użytkownik <strong>${senderName}</strong> wysłał Ci zaproszenie do grona znajomych. Zaakceptuj je, aby widzieć swoje prywatne marzenia i rezerwować prezenty!`,
+      buttonText: "Zobacz zaproszenie",
+      buttonPath: "/notifications",
+    }),
+  });
+
   revalidatePath("/");
   return { success: "Zaproszenie zostało wysłane!" };
 }
@@ -88,7 +102,11 @@ export async function acceptFriendRequest(requestId: string) {
 
   // Pobranie zaproszenia z upewnieniem się, że adresatem jest zalogowany użytkownik
   const request = await prisma.friendRequest.findUnique({
-    where: { id: requestId }
+    where: { id: requestId },
+    include: {
+      sender: true,
+      receiver: true,
+    },
   });
 
   if (!request || request.receiverId !== currentUser.id || request.status !== "PENDING") {
@@ -114,6 +132,31 @@ export async function acceptFriendRequest(requestId: string) {
     })
 
   ]);
+
+  const receiverName = request.receiver.name || request.receiver.email;
+
+  // Powiadomienie w aplikacji dla osoby, której zaproszenie zaakceptowano
+  await prisma.notification.create({
+    data: {
+      userId: request.senderId,
+      message: `${receiverName} zaakceptował(a) Twoje zaproszenie do znajomych!`,
+      link: `/friends/${request.receiverId}`,
+    },
+  });
+
+  // Powiadomienie e-mail
+  if (request.sender.email) {
+    await sendEmail({
+      to: request.sender.email,
+      subject: `${receiverName} zaakceptował(a) Twoje zaproszenie!`,
+      html: buildEmailTemplate({
+        heading: "Jesteście teraz znajomymi!",
+        message: `Użytkownik <strong>${receiverName}</strong> zaakceptował Twoje zaproszenie do znajomych. Możesz teraz przeglądać jego pełną listę marzeń.`,
+        buttonText: "Zobacz listę marzeń",
+        buttonPath: `/friends/${request.receiverId}`,
+      }),
+    });
+  }
 
   revalidatePath("/friends");
 }
@@ -181,6 +224,24 @@ export async function sendFriendRequestById(receiverId: string) {
         senderId: sender.id,
         receiverId: receiverId,
       },
+    });
+  }
+
+  const receiver = await prisma.user.findUnique({
+    where: { id: receiverId },
+  });
+
+  if (receiver?.email) {
+    const senderName = sender.name || sender.email;
+    await sendEmail({
+      to: receiver.email,
+      subject: `${senderName} zaprasza Cię do znajomych w SpełnioneMarzenie.pl`,
+      html: buildEmailTemplate({
+        heading: "Nowe zaproszenie do znajomych",
+        message: `Użytkownik <strong>${senderName}</strong> wysłał Ci zaproszenie do grona znajomych. Zaakceptuj je, aby widzieć swoje prywatne marzenia i rezerwować prezenty!`,
+        buttonText: "Zobacz zaproszenie",
+        buttonPath: "/notifications",
+      }),
     });
   }
 

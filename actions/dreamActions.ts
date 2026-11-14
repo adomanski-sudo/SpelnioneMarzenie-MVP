@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { sendEmail, buildEmailTemplate } from "@/lib/mail";
 
 export async function addDreamAction(formData: FormData) {
   const session = await auth();
@@ -18,7 +19,7 @@ export async function addDreamAction(formData: FormData) {
   const category = formData.get("category") as "CZAS" | "POMYSL" | "KONKRET" | "USMIECH";
   const visibility = formData.get("visibility") as "PUBLIC" | "PRIVATE";
   
-  // NOWOŚĆ: Odbiorca (dziecko) oraz rezerwacja własna rodzica
+  // Odbiorca (dziecko) oraz rezerwacja własna rodzica
   const rawChildId = formData.get("childId") as string;
   const reserveForMe = formData.get("reserveForMe") === "true";
 
@@ -90,8 +91,17 @@ export async function reserveDreamAction(dreamId: string, friendId: string) {
   if (!isFriend) return { error: "Brak uprawnień. Nie jesteś znajomym tej osoby." };
 
   // Pobranie marzenia, aby sprawdzić jego aktualny status
-  const dream = await prisma.dream.findUnique({ where: { id: dreamId } });
-  if (!dream) return { error: "Marzenie nie istnieje." };
+  const dream = await prisma.dream.findUnique({
+    where: { id: dreamId },
+    include: {
+      author: true,
+      reservedBy: true,
+    },
+  });
+
+  if (!dream) {
+    return { error: "Nie znaleziono marzenia." };
+  }
 
   // Logika sprawdzania, czy jest już zajęte
   if (dream.reservedById) {
@@ -99,14 +109,38 @@ export async function reserveDreamAction(dreamId: string, friendId: string) {
       return { error: "To marzenie zostało już przez Ciebie zarezerwowane." };
     }
 
-    // NOWOŚĆ: Powiadamiamy osobę, która zarezerwowała ten prezent wcześniej!
-    await prisma.notification.create({
-      data: {
-        userId: dream.reservedById, // Pierwszy rezerwujący
-        message: `${currentUser.name || currentUser.email} również chciał(a) zarezerwować marzenie „${dream.title}”. Może połączycie siły przy wspólnym prezencie?`,
-        link: `/friends/${currentUser.id}`, // Link do profilu tej osoby
-      },
-    });
+  // Gdy marzenie jest już zarezerwowane przez inną osobę:
+  if (dream.reservedById) {
+    if (dream.reservedById !== currentUser.id) {
+      const interestedUserName = currentUser.name || currentUser.email;
+      const authorName = dream.author.name || dream.author.email;
+
+      // Powiadomienie w aplikacji (dzwoneczek)
+      await prisma.notification.create({
+        data: {
+          userId: dream.reservedById,
+          message: `Użytkownik ${interestedUserName} również próbował zarezerwować marzenie „${dream.title}”. Możecie połączyć siły przy prezencie!`,
+          link: `/friends/${currentUser.id}`,
+        },
+      });
+
+      // Powiadomienie e-mail do osoby, która trzyma rezerwację
+      if (dream.reservedBy?.email) {
+        await sendEmail({
+          to: dream.reservedBy.email,
+          subject: `Ktoś jeszcze chce spełnić marzenie: „${dream.title}”`,
+          html: buildEmailTemplate({
+            heading: "Wspólny prezent?",
+            message: `Użytkownik <strong>${interestedUserName}</strong> właśnie próbował zarezerwować marzenie <strong>„${dream.title}”</strong> (z listy użytkownika ${authorName}), które jest już zarezerwowane przez Ciebie. Możesz skontaktować się z tą osobą, aby złożyć się na wspólny prezent!`,
+            buttonText: "Zobacz profil użytkownika",
+            buttonPath: `/friends/${currentUser.id}`,
+          }),
+        });
+      }
+    }
+
+    return { error: "To marzenie zostało już zarezerwowane przez kogoś innego!" };
+  }
 
     return { error: "Ktoś inny już zarezerwował to marzenie. Daliśmy mu znać, że też chciałeś je spełnić!" };
   }
@@ -150,13 +184,49 @@ export async function fulfillDreamAction(dreamId: string) {
   });
   if (!currentUser) return;
 
-  await prisma.dream.update({
+  // Pobieramy marzenie wraz z danymi osoby, która je zarezerwowała
+  const dream = await prisma.dream.findUnique({
     where: {
       id: dreamId,
-      authorId: currentUser.id, // Bezpiecznik: tylko autor może oznaczyć swoje marzenie
+      authorId: currentUser.id,
     },
+    include: {
+      reservedBy: true,
+    },
+  });
+
+  if (!dream) return;
+
+  await prisma.dream.update({
+    where: { id: dream.id },
     data: { isFulfilled: true },
   });
+
+  // Jeśli marzenie było zarezerwowane przez znajomego, informujemy go o spełnieniu
+  if (dream.reservedById && dream.reservedById !== currentUser.id) {
+    const authorName = currentUser.name || currentUser.email;
+
+    await prisma.notification.create({
+      data: {
+        userId: dream.reservedById,
+        message: `${authorName} oznaczył(a) zarezerwowane przez Ciebie marzenie „${dream.title}” jako spełnione! 🎉`,
+        link: `/friends/${currentUser.id}`,
+      },
+    });
+
+    if (dream.reservedBy?.email) {
+      await sendEmail({
+        to: dream.reservedBy.email,
+        subject: `Marzenie „${dream.title}” zostało spełnione! 🎉`,
+        html: buildEmailTemplate({
+          heading: "Marzenie spełnione!",
+          message: `<strong>${authorName}</strong> właśnie oznaczył(a) marzenie <strong>„${dream.title}”</strong> (zarezerwowane przez Ciebie) jako spełnione. Dziękujemy za wywołanie uśmiechu!`,
+          buttonText: "Zobacz profil znajomego",
+          buttonPath: `/friends/${currentUser.id}`,
+        }),
+      });
+    }
+  }
 
   revalidatePath("/");
   revalidatePath("/profile");
@@ -405,4 +475,20 @@ export async function editChildAction(childId: string, formData: FormData) {
   revalidatePath("/profile");
   revalidatePath("/add");
   revalidatePath("/");
+}
+
+export async function sendTestEmailAction() {
+  const session = await auth();
+  if (!session?.user?.email) return;
+
+  await sendEmail({
+    to: session.user.email,
+    subject: "Test powiadomień – SpełnioneMarzenie.pl",
+    html: `
+      <div style="font-family: sans-serif; padding: 20px; color: #1f2937;">
+        <h2 style="color: #2563eb;">Cześć ${session.user.name || ""}!</h2>
+        <p>Twoja skrzynka <strong>powiadomienie@spelnionemarzenie.pl</strong> jest poprawnie połączona z aplikacją.</p>
+      </div>
+    `,
+  });
 }

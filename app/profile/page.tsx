@@ -94,21 +94,19 @@ export default async function ProfilePage(props: Props) {
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <Link
             href="/profile?tab=ALL"
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors border ${
-              activeTab === "ALL"
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors border ${activeTab === "ALL"
                 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                 : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-            }`}
+              }`}
           >
             Wszystkie ({allActiveDreams.length})
           </Link>
           <Link
             href="/profile?tab=MINE"
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors border ${
-              activeTab === "MINE"
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors border ${activeTab === "MINE"
                 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                 : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
-            }`}
+              }`}
           >
             Moje własne
           </Link>
@@ -118,11 +116,10 @@ export default async function ProfilePage(props: Props) {
               <Link
                 key={child.id}
                 href={`/profile?tab=${child.id}`}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 ${
-                  activeTab === child.id
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors border flex items-center gap-1.5 ${activeTab === child.id
                     ? "bg-amber-500 text-white border-amber-500 shadow-sm"
                     : "bg-white text-gray-800 border-gray-200 hover:bg-amber-50"
-                }`}
+                  }`}
               >
                 <span>🎈 {child.name}</span>
                 {cAge && <span>({cAge})</span>}
@@ -164,9 +161,8 @@ export default async function ProfilePage(props: Props) {
                     <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span
-                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${
-                            catColors[dream.category] || "bg-gray-100 text-gray-700"
-                          }`}
+                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${catColors[dream.category] || "bg-gray-100 text-gray-700"
+                            }`}
                         >
                           {dream.category}
                         </span>
